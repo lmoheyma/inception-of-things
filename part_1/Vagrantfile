@@ -1,0 +1,39 @@
+Vagrant.configure("2") do |config|
+    cpus = 1
+    memory = 1024
+    nodes = [{
+        "name": "lmoheymaS",
+        "ip": "192.168.56.110",
+        "role": "server"
+    },
+    {
+        "name": "lmoheymaSW",
+        "ip": "192.168.56.111",
+        "role": "worker"
+    }]
+
+    config.vm.box = "hashicorp-education/ubuntu-24-04"
+    config.vm.box_version = "0.1.0"
+
+    nodes.each do |node|
+        config.vm.define node[:name] do |machine|
+            machine.vm.hostname = node[:name]
+            machine.vm.network "private_network", ip: node[:ip]
+            machine.vm.provider "virtualbox" do |vb|
+                vb.customize ["modifyvm", :id, "--name", node[:name]]
+                vb.memory = memory
+                vb.cpus = cpus
+            end
+            
+            machine.vm.provision "shell", path: "common_dependencies.sh"
+            
+            if node[:role] == "server"
+                machine.vm.provision "shell", path: "k3s_server_install.sh"
+            else
+                machine.vm.provision "shell", 
+                    path: "k3s_worker_install.sh", 
+                    args: ["192.168.56.110"]
+            end
+        end
+    end
+end

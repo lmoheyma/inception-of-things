@@ -1,6 +1,10 @@
 Vagrant.configure("2") do |config|
     cpus = 1
     memory = 1024
+
+    shared_folder_path = File.expand_path("./shared")
+    Dir.mkdir(shared_folder_path) unless File.directory?(shared_folder_path)
+
     nodes = [{
         "name": "lmoheymaS",
         "ip": "192.168.56.110",
@@ -24,8 +28,9 @@ Vagrant.configure("2") do |config|
                 vb.memory = memory
                 vb.cpus = cpus
             end
+            machine.vm.synced_folder "./shared", "/vagrant_shared"
             
-            machine.vm.provision "shell", path: "common_dependencies.sh"
+            # machine.vm.provision "shell", path: "common_dependencies.sh"
             
             if node[:role] == "server"
                 machine.vm.provision "shell", path: "k3s_server_install.sh"
